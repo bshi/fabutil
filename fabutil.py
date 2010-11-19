@@ -83,6 +83,45 @@ def bootstrap_ve(python='python', require=None):
         run('mkdir -p %(env_root)s/{etc,var,tmp}' % env)
 
 
+def install_nginx(src='http://nginx.org/download/nginx-0.8.52.tar.gz'):
+    '''Install nginx web server in the virtual environment.
+
+    Minimally, you'll need libpcre3-dev libglobus-openssl-dev for Ubuntu or the
+    equivalent on some other distribution.
+    '''
+
+    ng_distro = os.path.basename(src)
+    for ext, topts in (
+            ('.tar', 'xf'),
+            ('.tar.gz', 'zxf'),
+            ('.tgz', 'zxf'),
+            ('.tar.bz2', 'jxf'),
+            ('.tbz2', 'jxf')):
+        if ng_distro.endswith(ext):
+            ng_src_dir = ng_distro.rstrip(ext)
+            untar_opts = topts
+            break
+
+    with cd(os.path.join(env.env_root, 'src')):
+        run('wget "%s"' % src)
+        run(' '.join(('tar', untar_opts, ng_distro)))
+
+    with cd(os.path.join(env.env_root, 'src', ng_src_dir)):
+        run('./configure'
+            ' --with-http_stub_status_module'
+            ' --prefix=%(env_root)s'
+            ' --sbin-path=%(env_root)s/bin/nginx'
+            ' --pid-path=%(env_root)s/var/nginx.pid'
+            ' --http-client-body-temp-path=%(env_root)s/tmp/http_client_body_temp/'
+            ' --http-proxy-temp-path=%(env_root)s/tmp/proxy_temp/'
+            ' --http-fastcgi-temp-path=%(env_root)s/tmp/fastcgi_temp/'
+            ' --http-uwsgi-temp-path=%(env_root)s/tmp/uwsgi_temp/'
+            ' --http-scgi-temp-path=%(env_root)s/tmp/scgi_temp/'
+            ' --conf-path=%(env_root)s/etc/nginx/nginx.conf' % env)
+        run('make')
+        run('make install')
+
+
 def copytree(source, destroot, mkdir=True, excl=[], exclfunc=lambda x: False):
     '''
     Copy the contents of a directory tree.
