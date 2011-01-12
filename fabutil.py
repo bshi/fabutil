@@ -70,7 +70,7 @@ def bootstrap_ve(python='python', require=None):
     env.update(context)
     run('mkdir -p %(staging_dir)s' % env)
     with cd(env.staging_dir):
-        run('curl "%(ve_source)s" > virtualenv.py' % env)
+        run('curl -L "%(ve_source)s" > virtualenv.py' % env)
         run(' '.join((python,
                       'virtualenv.py --clear',
                       '--no-site-packages',
