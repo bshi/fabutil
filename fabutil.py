@@ -122,6 +122,83 @@ def install_nginx(src='http://nginx.org/download/nginx-0.8.52.tar.gz'):
         run('make install')
 
 
+# Some management commands follow:
+
+
+def _sighup(pid):
+    kill(pid, sig='HUP', rmpid=False)
+
+
+
+def start_stack():
+    'Alias for: start_nginx start_uwsgi'
+    start_nginx()
+    start_uwsgi()
+
+
+def stop_stack():
+    'Alias for: kill_nginx kill_uwsgi'
+    kill_nginx()
+    kill_uwsgi()
+
+
+def start_nginx():
+    '''Start web server.
+
+    TERM/INT: Quick shutdown
+    QUIT: Graceful shutdown
+    HUP: Configuration reload; Start the new worker processes with a new
+         configuration and gracefully shutdown the old worker processes
+         USR1 Reopen the log files
+    USR2: Upgrade Executable on the fly
+    WINCH: Gracefully shutdown the worker processes
+
+    http://wiki.nginx.org/CommandLine
+    '''
+    kill(os.path.join(env.env_root, 'var', 'nginx.pid'), sig='QUIT')
+    vrun('nginx')
+
+
+def sighup_nginx():
+    'Gracefully restart nginx.'
+    _sighup(os.path.join(env.env_root, 'var', 'nginx.pid'))
+
+
+def kill_nginx():
+    'Stop nginx.'
+    kill(os.path.join(env.env_root, 'var', 'nginx.pid'), sig='QUIT')
+
+
+def start_uwsgi():
+    '''Start uWSGI.
+
+    The uWSGI server responds to this signals[1]:
+
+    SIGHUP: reload (gracefully) all the workers and the master process
+    SIGTERM: brutally reload all the workers and the master process
+    SIGINT/SIGQUIT: kill all the uWSGI stack
+    SIGUSR1: print statistics
+
+    [1] http://projects.unbit.it/uwsgi/wiki/uWSGISignals
+    '''
+    if files.exists(os.path.join(env.env_root, 'var', 'uwsgi.pid')):
+        print 'PID File exists, running "sighup_app"'
+        sighup_app()
+    else:
+        vrun('uwsgi'
+             ' --ini %(env_root)s/etc/uwsgi.ini'
+             ' -d %(env_root)s/logs/uwsgi.log' % env)
+
+def kill_uwsgi():
+    'Stop uWSGI master and worker processes.'
+    kill(os.path.join(env.env_root, 'var', 'uwsgi.pid'), sig='SIGINT')
+
+
+def sighup_uwsgi():
+    'Gracefully restart uWSGI.'
+    _sighup(os.path.join(env.env_root, 'var', 'uwsgi.pid'))
+
+
 def copytree(source, destroot, mkdir=True, excl=[], exclfunc=lambda x: False):
     '''
     Copy the contents of a directory tree.
