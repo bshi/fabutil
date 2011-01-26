@@ -181,11 +181,21 @@ def start_uwsgi():
 
     [1] http://projects.unbit.it/uwsgi/wiki/uWSGISignals
     '''
+
+    # Note!  Need to start uWSGI with the full path to the binary.
+    # > This is caused by your binary path changing after startup.
+    # > For example you start uwsgi with
+    # > ./uwsgi
+    # > in directory /tmp than you chdir to something else.
+    # > When uWSGI restarts ./uwsgi is no more valid.  There are other cases but
+    # > they are all fixed in the patch 0966_0967 that you will find in the list
+    # > archives, or you can wait til tomorrow when uwsgi-0.9.6.7 will be
+    # > released.
     if files.exists(os.path.join(env.env_root, 'var', 'uwsgi.pid')):
         print 'PID File exists, running sighup_uwsgi()'
         sighup_uwsgi()
     else:
-        vrun('uwsgi'
+        vrun('%(env_root)s/bin/uwsgi'
              ' --ini %(env_root)s/etc/uwsgi.ini'
              ' -d %(env_root)s/logs/uwsgi.log' % env)
 
