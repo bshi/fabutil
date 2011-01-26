@@ -182,8 +182,8 @@ def start_uwsgi():
     [1] http://projects.unbit.it/uwsgi/wiki/uWSGISignals
     '''
     if files.exists(os.path.join(env.env_root, 'var', 'uwsgi.pid')):
-        print 'PID File exists, running "sighup_app"'
-        sighup_app()
+        print 'PID File exists, running sighup_uwsgi()'
+        sighup_uwsgi()
     else:
         vrun('uwsgi'
              ' --ini %(env_root)s/etc/uwsgi.ini'
