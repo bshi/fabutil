@@ -1,3 +1,5 @@
+import getpass
+import socket
 import tempfile
 from datetime import datetime
 from fabric.api import env
@@ -8,6 +10,8 @@ from fabric.decorators import task, runs_once, roles
 
 def set_defaults():
     'Set default environment values.'
+    env.deploy_user = getpass.getuser()
+    env.deploy_hostname = socket.gethostname()
     env.format = True
     env.pypi = 'http://pypi.python.org/simple'
     env.python = 'python'
