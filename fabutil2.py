@@ -62,13 +62,14 @@ def local(command, **kwargs):
 
 @formatargs
 def put(local_path, remote_path, **kwargs):
+    formatted = None
     if 'putstr' in kwargs:
         formatted = kwargs.pop('putstr').format(**env)
-    else:
+    elif kwargs.pop('template', False) is True:
         with open(local_path) as file:
             formatted = file.read().format(**env)
 
-    if kwargs.pop('template', False) is True:
+    if formatted is not None:
         (fd, filename) = tempfile.mkstemp()
         with open(filename, 'w') as file:
             file.write(formatted)
