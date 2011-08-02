@@ -150,3 +150,4 @@ def setup_user_runit(acct=None, home=None):
     sudo('mkdir -p /etc/sv/{acct}')
     sudo('ln -sf /etc/service/{acct}/run /etc/sv/{acct}/run')
     put(None, '/etc/service/{acct}/run', putstr=runfile, use_sudo=True, template=True)
+    run('chmod 755 /etc/service/{acct}/run')
