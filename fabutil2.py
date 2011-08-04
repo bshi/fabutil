@@ -142,12 +142,25 @@ def setup_user_account(acct=None, home=None):
 @roles('system-role')
 def setup_user_runit(acct=None, home=None):
     _setup_system_role_env(acct, home)
+    env.runit_log_dir = '{home}/shared/log/runit'.format(**env)
     runfile = ('#!/bin/sh\n'
                'exec 2>&1\n'
                'exec chpst -u{acct} runsvdir {home}/service\n').format(**env)
+
+    runfile_log = ('#!/bin/sh\n'
+                   'exec chpst -u{acct} svlogd -tt {runit_log_dir}/\n')
+    
+    sudo('mkdir -p {runit_log_dir}')
+    sudo('chown -R {acct}:{acct} {runit_log_dir}')
         
-    sudo('mkdir -p /etc/service/{acct}')
+    sudo('mkdir -p /etc/service/{acct}/log')
     sudo('mkdir -p /etc/sv/{acct}')
     sudo('ln -sf /etc/service/{acct}/run /etc/sv/{acct}/run')
-    put(None, '/etc/service/{acct}/run', putstr=runfile, use_sudo=True, template=True)
-    run('chmod 755 /etc/service/{acct}/run')
+    sudo('ln -sf /etc/service/{acct}/log /etc/sv/{acct}/log')
+    # template=True implied by use of putstr argument.
+    put(None, '/etc/service/{acct}/run', putstr=runfile, use_sudo=True)
+    put(None, '/etc/service/{acct}/log/run', putstr=runfile_log, use_sudo=True)
+    sudo('chown root:root /etc/service/{acct}/run')
+    sudo('chown root:root /etc/service/{acct}/log/run')
+    sudo('chmod 755 /etc/service/{acct}/run')
+    sudo('chmod 755 /etc/service/{acct}/log/run')
