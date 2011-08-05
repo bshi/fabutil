@@ -151,7 +151,7 @@ def setup_user_runit(acct=None, home=None):
                    'exec chpst -u{acct} svlogd -tt {runit_log_dir}/\n')
     
     sudo('mkdir -p {runit_log_dir}')
-    sudo('chown -R {acct}:{acct} {runit_log_dir}')
+    sudo('chown -R {acct}:{acct} {home}/shared')
         
     sudo('mkdir -p /etc/service/{acct}/log')
     sudo('mkdir -p /etc/sv/{acct}')
