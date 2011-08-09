@@ -100,6 +100,36 @@ def print_hosts():
 
 
 #
+# Management Commands
+#
+
+
+@task
+@roles('system-role')
+def configure_nginx(conf, name):
+    env.nginx_vhost_name = name
+    put(conf, '/etc/nginx/sites-available/{nginx_vhost_name}',
+        use_sudo=True, template=True)
+    sudo('ln -sf /etc/nginx/sites-available/{nginx_vhost_name}'
+         ' /etc/nginx/sites-enabled/{nginx_vhost_name}')
+    sudo('/etc/init.d/nginx restart')
+
+
+@task
+@roles('web')
+def deploy_crontab():
+    if env.crontab:
+        put(None, '{home}/tmp/crontab', putstr=env.crontab + '\n\n')
+        run('crontab {home}/tmp/crontab')
+
+
+@task
+@roles('web')
+def sv(cmd, service):
+    run('SVDIR={home}/service sv ' + cmd + ' ' + service)
+
+
+#
 # Admin Setup
 #
 
@@ -164,3 +194,62 @@ def setup_user_runit(acct=None, home=None):
     sudo('chown root:root /etc/service/{acct}/log/run')
     sudo('chmod 755 /etc/service/{acct}/run')
     sudo('chmod 755 /etc/service/{acct}/log/run')
+
+
+#
+# Local redis setup.
+#
+
+
+@task
+@roles('web')
+def install_redis(conf='etc/redis.conf.template',
+                  src='http://redis.googlecode.com/files/redis-2.2.12.tar.gz'):
+    run('mkdir -p {home}/redis/etc/redis')
+    run('mkdir -p {home}/redis/src')
+    put(conf, '{home}/redis/etc/redis/redis.conf', template=True)
+    redis_distro = os.path.basename(src)
+    for ext, topts in (
+            ('.tar', 'xf'),
+            ('.tar.gz', 'zxf'),
+            ('.tgz', 'zxf'),
+            ('.tar.bz2', 'jxf'),
+            ('.tbz2', 'jxf')):
+        if redis_distro.endswith(ext):
+            redis_src_dir = redis_distro.rstrip(ext)
+            untar_opts = topts
+            break
+
+    with cd(os.path.join(env.home, 'redis', 'src')):
+        run('wget "%s"' % src)
+        run(' '.join(('tar', untar_opts, redis_distro)))
+
+    with cd(os.path.join(env.home, 'redis', 'src', redis_src_dir)):
+        run('make')
+        run('make PREFIX={home}/redis/ install' % env)
+
+    redis_runit_template = (
+        '#!/bin/bash\n\n'
+        'REDIS={home}/redis/bin/redis-server\n'
+        'CONF={home}/redis/etc/redis/redis.conf\n'
+        'PID={home}/shared/run/redis.pid\n'
+        'if [ -f $PID ]; then rm $PID; fi\n'
+        'exec $REDIS $CONF\n')
+
+    run('mkdir -p {home}/service/redis')
+    put(None, '{home}/service/redis/run', putstr=redis_runit_template)
+    run('chmod 755 {home}/service/redis/run')
+
+
+@task
+@roles('web')
+def start_redis():
+    'Start Redis database'
+    run('SVDIR={home}/service sv start redis')
+
+
+@task
+@roles('web')
+def kill_redis():
+    'Stop Redis database'
+    run('SVDIR={home}/service sv stop redis')
