@@ -17,7 +17,7 @@ def set_defaults():
     env.python = 'python'
     env.virtualenv = 'virtualenv -p {python} --no-site-packages --distribute'.format(**env)
     env.now = datetime.now().strftime('%Y%m%d%H%M%S')
-    env.gitrev = fabric_local('git describe', capture=True)
+    env.gitrev = fabric_local('git describe --dirty', capture=True)
     env.base = '{now}-{gitrev}'.format(**env)
 
 
@@ -133,7 +133,7 @@ def setup_user_account(acct=None, home=None):
         auth2 = ('# DO NOT EDIT, MANAGED BY fabfile.py\n' + 
                  '\n'.join(env.authorized_keys))
         put(None, '{home}/.ssh/authorized_keys2',
-            putstr=auth2, use_sudo=True, template=True)
+            putstr=auth2, use_sudo=True)
         sudo('chmod 600 {home}/.ssh/authorized_keys2')
     sudo('chown -R {acct}:{acct} {home}')
 
