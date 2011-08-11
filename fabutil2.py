@@ -1,4 +1,5 @@
 import getpass
+import os
 import socket
 import tempfile
 from datetime import datetime
