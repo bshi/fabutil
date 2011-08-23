@@ -27,6 +27,19 @@ def set_defaults():
 #
 
 
+def u_h(u, h):
+    return '@'.join((u, h))
+
+
+def get_ec2_cluster(application_group, tagname='application-group'):
+    import boto
+    c = boto.connect_ec2()
+    iids = [t.res_id for t in c.get_all_tags()
+            if t.name == tagname and t.value == application_group]
+    instances = [i.instances[0] for i in c.get_all_instances(instance_ids=iids)]
+    return instances
+
+
 def formatargs(func):
     def wrapper(*args, **kwargs):
         if getattr(env, 'format', False) is True:
