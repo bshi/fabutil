@@ -144,6 +144,30 @@ def sv(cmd, service):
 
 
 #
+# Utility functions
+#
+
+@task
+@runs_once
+def build_packages():
+    '''Find setup.py files and run them.
+    '''
+    base_dirs = []
+    dist_dir = os.path.abspath('./dist')
+    local('mkdir -p {0}'.format(dist_dir))
+    for root, dirs, files in os.walk('.'):
+        if 'setup.py' in files:
+            base_dirs.append(root)
+    for rel_base in base_dirs:
+        base = os.path.abspath(rel_base)
+        base_dist = os.path.join(base, 'dist')
+        local('cd {0} && python setup.py sdist --force-manifest'.format(base))
+        if base_dist != dist_dir:
+            local('mv {0}/* {1}'.format(base_dist, dist_dir))
+            local('rmdir {0}'.format(base_dist))
+
+
+#
 # Admin Setup
 #
 
