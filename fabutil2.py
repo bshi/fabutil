@@ -167,6 +167,23 @@ def build_packages():
             local('rmdir {0}'.format(base_dist))
 
 
+def sshagent_run(cmd):
+    """
+    Helper function.
+    Runs a command with SSH agent forwarding enabled.
+
+    Note:: Fabric (and paramiko) can't forward your SSH agent.
+    This helper uses your system's ssh to do so.
+    """
+    h = env.host_string
+    try:
+        # catch the port number to pass to ssh
+        host, port = h.split(':')
+        local('ssh-add && ssh-add -l && ssh -p %s -A %s "%s"' % (port, host, cmd))
+    except ValueError:
+        local('ssh-add && ssh-add -l && ssh -A %s "%s"' % (h, cmd))
+
+
 #
 # Admin Setup
 #
