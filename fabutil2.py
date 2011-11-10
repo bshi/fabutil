@@ -152,6 +152,11 @@ def sv(cmd, service):
 def build_packages():
     '''Find setup.py files and run them.
     '''
+    # --force-manifest is only available with distutils, not
+    # setuptools/distribute.  Sigh.
+    base = os.path.abspath('.')
+    local('find {0} -name MANIFEST | xargs rm'.format(base))
+
     base_dirs = []
     dist_dir = os.path.abspath('./dist')
     local('mkdir -p {0}'.format(dist_dir))
@@ -161,7 +166,7 @@ def build_packages():
     for rel_base in base_dirs:
         base = os.path.abspath(rel_base)
         base_dist = os.path.join(base, 'dist')
-        local('cd {0} && python setup.py sdist --force-manifest'.format(base))
+        local('cd {0} && python setup.py sdist'.format(base))
         if base_dist != dist_dir:
             local('mv {0}/* {1}'.format(base_dist, dist_dir))
             local('rmdir {0}'.format(base_dist))
