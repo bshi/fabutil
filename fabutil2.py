@@ -18,7 +18,10 @@ def set_defaults():
     env.python = 'python'
     env.virtualenv = 'virtualenv -p {python} --no-site-packages --distribute'.format(**env)
     env.now = datetime.now().strftime('%Y%m%d%H%M%S')
-    env.gitrev = fabric_local('git describe --dirty', capture=True)
+    try:
+        env.gitrev = fabric_local('git describe --dirty', capture=True)
+    except:
+        env.gitrev = None
     env.base = '{now}-{gitrev}'.format(**env)
 
 
