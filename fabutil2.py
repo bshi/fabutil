@@ -187,9 +187,9 @@ def sshagent_run(cmd):
     try:
         # catch the port number to pass to ssh
         host, port = h.split(':')
-        local('ssh-add && ssh-add -l && ssh -p %s -A %s "%s"' % (port, host, cmd))
+        local('ssh -p %s -A %s "%s"' % (port, host, cmd))
     except ValueError:
-        local('ssh-add && ssh-add -l && ssh -A %s "%s"' % (h, cmd))
+        local('ssh -A %s "%s"' % (h, cmd))
 
 
 #
