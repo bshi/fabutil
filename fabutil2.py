@@ -7,7 +7,13 @@ from fabric.api import env
 from fabric.api import run as fabric_run, sudo as fabric_sudo, local as fabric_local
 from fabric.api import put as fabric_put, get as fabric_get, cd as fabric_cd
 from fabric.decorators import task, runs_once, roles
-
+from fabric.colors import red
+try:
+    import irclib
+    irclib_loaded=True
+except ImportError:
+    print(red('fabutil2: irclib not found!'))
+    irclib_loaded=False
 
 def set_defaults():
     'Set default environment values.'
@@ -317,3 +323,20 @@ def start_redis():
 def kill_redis():
     'Stop Redis database'
     run('SVDIR={home}/service sv stop redis')
+
+import time
+
+def irc_msg(server, port, nick, channel, msg, password=None, sleep=5):
+    if irclib_loaded:
+        client = irclib.SimpleIRCClient()
+        if password is not None:
+            client.connect(server, port, nick, password=password)
+        else:
+            client.connect(server, port, nick)
+        time.sleep(sleep)
+        client.connection.join(channel)
+        time.sleep(sleep)
+        client.connection.privmsg(channel, msg)
+        client.connection.close()
+    else:
+        pass
